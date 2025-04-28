@@ -7,8 +7,7 @@
 select
 distinct(replacement_cost)
 from film
-order by 1
-limit 1;
+order by 1;
 
 -- Question 2:
 -- Level: Moderate
@@ -22,6 +21,7 @@ limit 1;
 select
 case
 when replacement_cost between 9.99 and 19.99 then 'Low'
+-- when replacement_cost <= 19.99 then 'Low'
 when replacement_cost between 20.00 and 24.99 then 'Medium'
 when replacement_cost between 25.00 and 29.99 then 'High'
 end as category,
@@ -47,8 +47,7 @@ inner join category c
 on fc.category_id = c.category_id
 where name = 'Drama' or 
 name = 'Sports'
-order by length desc
-limit 1;
+order by length desc;
 
 -- Question 4:
 -- Level: Moderate
@@ -65,8 +64,7 @@ on f.film_id = fc.film_id
 inner join category c
 on fc.category_id = c.category_id
 group by name
-order by 2 desc
-limit 1;
+order by 2 desc;
 
 -- Question 5:
 -- Level: Moderate
@@ -84,8 +82,7 @@ on a.actor_id = fa.actor_id
 inner join film f
 on fa.film_id = f.film_id
 group by first_name, last_name
-order by 3 desc
-limit 1;
+order by 3 desc;
 
 -- Question 6:
 -- Level: Moderate
@@ -158,8 +155,8 @@ staff_id,
 sum(amount) as total_amount
 from payment
 group by customer_id, staff_id
-)
-group by staff_id;
+) -- first aggregate customer and staff together and calculate their sum total
+group by staff_id; -- calculate average sum for staff with regard to customer
 
 -- Question 10:
 -- Level: Difficult to very difficult
@@ -168,15 +165,16 @@ group by staff_id;
 -- Question: What is the daily average revenue of all Sundays? -- 1410.65
 
 select
-round(avg(total_amount), 2) as avg_sunday_sales
+round(avg(total_amount), 2) as avg_sunday_sales -- from extracting all sundays, get the average across all
 from
 (
 select
-date(payment_date) as date,
-sum(amount) as total_amount
+date(payment_date) as date, -- get all dates in the payment_date
+extract(dow from payment_date) as week_day, -- narrow the weekday in all dates
+sum(amount) as total_amount -- calculate sum of revenue across all sunday in each date 
 from payment
-where extract(dow from payment_date) = 0
-group by date(payment_date)
+where extract(dow from payment_date) = 0 -- only focus on each sunday(0)
+group by date(payment_date), extract(dow from payment_date) -- get the total sales per day per weekday
 );
 
 -- Question 11:
@@ -184,20 +182,20 @@ group by date(payment_date)
 -- Topic: Correlated subquery
 -- Task: Create a list of movies - with their length and their replacement cost 
 -- that are longer than the average length in each replacement cost group.
--- Question: Which two movies are the shortest on that list and how long are they?
+-- Question: Which two movies are the shortest on that list and how long are they? - CELEBRITY HORN and SEATTLE EXPECATIONS with length of 110
 
 select
 title,
 replacement_cost,
 length
 from film f2
-where length >
+where length > -- filter length that longer than average length
 (
 select
 avg(length)
 from film f1
-where f1.replacement_cost = f2.replacement_cost
-)
+where f1.replacement_cost = f2.replacement_cost -- subquery f1 correlated to outerquery f2
+) -- get the average length with regard to replacement cost group
 order by 3
 limit 2;
 
@@ -209,7 +207,7 @@ limit 2;
 
 select
 district,
-round(avg(total_amount), 2) as avg_lifetime_value
+round(avg(total_amount), 2) as avg_lifetime_value -- get the average revenue by different districts
 from 
 (
 select
@@ -222,7 +220,7 @@ on a.address_id = c.address_id
 inner join payment p
 on c.customer_id = p.customer_id
 group by district, c.customer_id
-)
+) -- get the sum revenue for each customer and district
 group by district
 order by 2 desc;
 
@@ -250,7 +248,7 @@ left join film_category fc
 on fc.film_id = f.film_id
 left join category c1
 on c1.category_id = fc.category_id
-where c1.name = c2.name
+where c1.name = c2.name -- get the total amount with regard to the name that shows in category table
 )
 from payment p
 left join rental r
@@ -264,7 +262,7 @@ on fc.film_id = f.film_id
 left join category c2
 on c2.category_id = fc.category_id
 where name = 'Action'
-order by 4;
+order by 1, 4;
 
 -- Question 14:
 -- Level: Extremely difficult
